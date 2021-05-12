@@ -1,7 +1,7 @@
 import random
 
-#PRIMO = 2**128-1
-PRIMO=1613
+# generar un primo p (no secreto) mayor que el secreto S
+PRIMO = 2**128-1
 
 def generador_v (m, n, s):
     #Generamos aleatoriamente una lista de coeficientes (v)
@@ -9,7 +9,7 @@ def generador_v (m, n, s):
     vs=[]
     vs.append(s)
     for i in range(n - 1):
-        vs.append(random.randrange(1, m))
+        vs.append(random.randrange(1, PRIMO))
     return vs
 
 def comparticiones(s, n, m):
@@ -21,11 +21,9 @@ def comparticiones(s, n, m):
     # de las cuales sólo n son independientes, de modo que cualesquiera
     # n bastan para resolver el sistema de ecuaciones.
     v = generador_v(m, n, s)
-    comparticiones = []
     x = [i for i in range(1, m+1)]
-    comparticiones.append((x, polinomio(x, v)))
+    return tuple(polinomio(x,v))
 
-    return comparticiones
 
 def polinomio (x, v):
     pol=[]
@@ -37,6 +35,24 @@ def polinomio (x, v):
         suma=0
     return pol
 
+def reconstruccion(partes):
+    #Para reconstruir el secreto basta con juntar n ecuaciones a partir
+    #de los datos de n custodios, resolviendo el sistema y obteniendo S.
+    #Si no se pueden juntar n ecuaciones, el sistema tiene infinitas soluciones
+    #  y por tanto se tiene información cero. El sistema puede resolverse por
+    #  el método de Lagrange.
+
+    secreto = 0
+
+    for j in range(len(partes)):
+        prod = 1
+        for m in range(len(partes)):
+            if m != j:
+                prod *= (m+1) / ((m+1) - (j+1))
+
+        prod *= partes[j]
+        secreto += prod
+    return secreto
 
 if __name__ == '__main__':
 
@@ -64,8 +80,11 @@ if __name__ == '__main__':
         except ValueError:
             print("Tienes que introducir un entero menor que m")
 
+    sol = comparticiones(s, n, m)
+    print('Las reparticiones quedan:')
+    for i in range (len(sol)):
+        print (i + 1, sol[i])
+    print("El secreto era:")
+    print(reconstruccion(sol))
 
-    # generar un primo p (no secreto) mayor que el secreto S
-    primo = 2 ** s - 1
 
-    print(comparticiones(s, n, m))
